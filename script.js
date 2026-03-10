@@ -6,7 +6,7 @@ const PLATFORMS = [
   {
     id: "instagram",
     name: "Instagram",
-    iconUrl: "/images/instagram.png",
+    iconUrl: "images/instagram.png",
     iconFallbackClass: "bi bi-instagram",
     defaultUrl:
       "https://www.instagram.com/coentrocomsabor?igsh=ZTVhdDRjZzl3dHoz",
@@ -15,7 +15,7 @@ const PLATFORMS = [
   {
     id: "whatsapp",
     name: "WhatsApp",
-    iconUrl: "/images/whatsapp.png",
+    iconUrl: "images/whatsapp.png",
     iconFallbackClass: "bi bi-whatsapp",
     defaultUrl: "https://wa.me/5511911637577",
     placeholder: "https://wa.me/5511999999999"
@@ -23,7 +23,7 @@ const PLATFORMS = [
   {
     id: "ifood",
     name: "iFood",
-    iconUrl: "/images/ifood.png",
+    iconUrl: "images/ifood.png",
     iconFallbackClass: "bi bi-bag-fill",
     defaultUrl: "",
     placeholder: "https://www.ifood.com.br/delivery/..."
@@ -31,7 +31,7 @@ const PLATFORMS = [
   {
     id: "keeta",
     name: "Keeta",
-    iconUrl: "/images/keeta.png",
+    iconUrl: "images/keeta.png",
     iconFallbackClass: "bi bi-truck",
     defaultUrl: "",
     placeholder: "https://www.keeta.com/..."
@@ -39,7 +39,7 @@ const PLATFORMS = [
   {
     id: "99food",
     name: "99 Food",
-    iconUrl: "/images/99food.png",
+    iconUrl: "images/99food.png",
     iconFallbackUrl: "/images/99Food.jpg",
     iconFallbackClass: "bi bi-circle-fill",
     defaultUrl: "",
@@ -48,7 +48,7 @@ const PLATFORMS = [
   {
     id: "cardapio",
     name: "Card\u00E1pio Virtual",
-    iconUrl: "/images/menu.png",
+    iconUrl: "images/menu.png",
     iconFallbackClass: "bi bi-journal-richtext",
     defaultUrl: "",
     placeholder: "https://seusite.com/cardapio"
@@ -597,3 +597,4 @@ function init() {
 }
 
 init();
+
