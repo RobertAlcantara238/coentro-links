@@ -6,7 +6,7 @@ const PLATFORMS = [
   {
     id: "instagram",
     name: "Instagram",
-    iconUrl: "images/instagram.png",
+    iconUrl: "images/Instagram.png",
     iconFallbackClass: "bi bi-instagram",
     defaultUrl:
       "https://www.instagram.com/coentrocomsabor?igsh=ZTVhdDRjZzl3dHoz",
@@ -23,7 +23,7 @@ const PLATFORMS = [
   {
     id: "ifood",
     name: "iFood",
-    iconUrl: "images/ifood.png",
+    iconUrl: "images/iFood.png",
     iconFallbackClass: "bi bi-bag-fill",
     defaultUrl: "",
     placeholder: "https://www.ifood.com.br/delivery/..."
@@ -39,7 +39,7 @@ const PLATFORMS = [
   {
     id: "99food",
     name: "99 Food",
-    iconUrl: "images/99food.png",
+    iconUrl: "images/99Food.png",
     iconFallbackUrl: "/images/99Food.jpg",
     iconFallbackClass: "bi bi-circle-fill",
     defaultUrl: "",
@@ -597,4 +597,5 @@ function init() {
 }
 
 init();
+
 
