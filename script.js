@@ -2,7 +2,7 @@ const LINKS = [
   {
     name: "Instagram",
     icon: "images/Instagram.png",
-    url: "https://instagram.com/coentro"
+    url: "https://www.instagram.com/coentrocomsabor?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
   },
   {
     name: "WhatsApp",
@@ -91,5 +91,6 @@ function renderLinks() {
 }
 
 renderLinks();
+
 
 
