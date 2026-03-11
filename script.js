@@ -1,601 +1,609 @@
-﻿const STORAGE_KEY = "coentro.links.v1";
-const ADMIN_AUTH_KEY = "coentro.admin.auth.v1";
-const ADMIN_PASSWORD_HASH = "14df63d173ec6e9eca1395efa31031d960f81da35410295aeca8e1652e4db510";
-
-const PLATFORMS = [
-  {
-    id: "instagram",
-    name: "Instagram",
-    iconUrl: "images/Instagram.png",
-    iconFallbackClass: "bi bi-instagram",
-    defaultUrl:
-      "https://www.instagram.com/coentrocomsabor?igsh=ZTVhdDRjZzl3dHoz",
-    placeholder: "https://instagram.com/seuperfil"
-  },
-  {
-    id: "whatsapp",
-    name: "WhatsApp",
-    iconUrl: "images/whatsapp.png",
-    iconFallbackClass: "bi bi-whatsapp",
-    defaultUrl: "https://wa.me/5511911637577",
-    placeholder: "https://wa.me/5511999999999"
-  },
-  {
-    id: "ifood",
-    name: "iFood",
-    iconUrl: "images/iFood.png",
-    iconFallbackClass: "bi bi-bag-fill",
-    defaultUrl: "",
-    placeholder: "https://www.ifood.com.br/delivery/..."
-  },
-  {
-    id: "keeta",
-    name: "Keeta",
-    iconUrl: "images/keeta.png",
-    iconFallbackClass: "bi bi-truck",
-    defaultUrl: "",
-    placeholder: "https://www.keeta.com/..."
-  },
-  {
-    id: "99food",
-    name: "99 Food",
-    iconUrl: "images/99Food.png",
-    iconFallbackUrl: "/images/99Food.jpg",
-    iconFallbackClass: "bi bi-circle-fill",
-    defaultUrl: "",
-    placeholder: "https://99app.com/food/..."
-  },
-  {
-    id: "cardapio",
-    name: "Card\u00E1pio Virtual",
-    iconUrl: "images/menu.png",
-    iconFallbackClass: "bi bi-journal-richtext",
-    defaultUrl: "",
-    placeholder: "https://seusite.com/cardapio"
-  }
-];
-
-const publicView = document.getElementById("public-view");
-const adminView = document.getElementById("admin-view");
-const linkList = document.getElementById("link-list");
-const adminFields = document.getElementById("admin-fields");
-const adminForm = document.getElementById("admin-form");
-const adminToggle = document.getElementById("admin-toggle");
-const authModal = document.getElementById("auth-modal");
-const authForm = document.getElementById("auth-form");
-const authPasswordInput = document.getElementById("auth-password");
-const authCancel = document.getElementById("auth-cancel");
-const authError = document.getElementById("auth-error");
-const toast = document.getElementById("toast");
-
-const APP_BASE_PATH = getBasePath();
-let toastTimerId = null;
-
-function normalizePath(pathname) {
-  const normalized = pathname.replace(/\/+$/, "");
-  return normalized || "/";
+:root {
+  --brand: #6a9a42;
+  --brand-strong: #4f7b2f;
+  --bg: #f4f1e8;
+  --surface: rgba(255, 255, 255, 0.9);
+  --text-main: #2f3728;
+  --text-soft: #617056;
+  --border-soft: #dfe6d7;
+  --shadow-soft: 0 16px 36px rgba(68, 90, 48, 0.14);
 }
 
-function getBasePath() {
-  const currentPath = normalizePath(window.location.pathname);
-  if (currentPath.endsWith("/admin")) {
-    return currentPath.slice(0, -6) || "/";
-  }
-  if (currentPath.endsWith("/index.html")) {
-    return currentPath.slice(0, -11) || "/";
-  }
-  return currentPath;
+* {
+  box-sizing: border-box;
 }
 
-function buildRoutePath(route) {
-  if (route === "admin") {
-    return APP_BASE_PATH === "/" ? "/admin" : `${APP_BASE_PATH}/admin`;
-  }
-  return APP_BASE_PATH;
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-function getRouteFromLocation() {
-  if (window.location.hash === "#/admin") {
-    return "admin";
-  }
-
-  const currentPath = normalizePath(window.location.pathname);
-  return currentPath.endsWith("/admin") ? "admin" : "public";
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Nunito Sans", sans-serif;
+  color: var(--text-main);
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top right, #ebf4dc, transparent 46%),
+    radial-gradient(circle at left bottom, #efe5ce, transparent 44%),
+    var(--bg);
 }
 
-function getDefaultLinks() {
-  const defaults = {};
-  for (const platform of PLATFORMS) {
-    defaults[platform.id] = platform.defaultUrl;
-  }
-  return defaults;
+body.modal-open {
+  overflow: hidden;
 }
 
-function readSavedLinks() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {};
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch (error) {
-    return {};
-  }
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
-function getLinksModel() {
-  const defaults = getDefaultLinks();
-  const saved = readSavedLinks();
-
-  return Object.fromEntries(
-    PLATFORMS.map((platform) => {
-      const value = saved[platform.id] ?? defaults[platform.id] ?? "";
-      return [platform.id, String(value).trim()];
-    })
-  );
+.leaf {
+  position: absolute;
+  display: block;
+  width: 170px;
+  height: 86px;
+  border-radius: 90% 0;
+  background: linear-gradient(135deg, rgba(106, 154, 66, 0.2), rgba(106, 154, 66, 0.06));
+  filter: blur(0.2px);
 }
 
-function saveLinksModel(links) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
-    return true;
-  } catch (error) {
-    return false;
-  }
+.leaf-1 {
+  top: 5%;
+  left: -34px;
+  transform: rotate(-18deg);
 }
 
-function isValidHttpUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch (error) {
-    return false;
-  }
+.leaf-2 {
+  right: -50px;
+  top: 28%;
+  transform: rotate(30deg) scale(1.1);
 }
 
-function formatLink(raw) {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-
-  return `https://${trimmed}`;
+.leaf-3 {
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%) rotate(12deg);
 }
 
-function appendFallbackIcon(iconWrap, className) {
-  if (!className) {
-    return;
-  }
-
-  const icon = document.createElement("i");
-  icon.className = className;
-  icon.setAttribute("aria-hidden", "true");
-  iconWrap.append(icon);
+.page-wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  padding: 1.3rem 0.9rem 2rem;
 }
 
-function createIconElement(platform) {
-  const iconWrap = document.createElement("span");
-  iconWrap.className = "icon-wrap";
-
-  if (platform.iconUrl) {
-    const image = document.createElement("img");
-    image.className = "brand-icon";
-    image.src = platform.iconUrl;
-    image.alt = "";
-    image.loading = "lazy";
-    image.decoding = "async";
-    image.setAttribute("aria-hidden", "true");
-    image.addEventListener("error", () => {
-      if (platform.iconFallbackUrl) {
-        const fallbackAbsolute = new URL(platform.iconFallbackUrl, window.location.href).href;
-        if (image.src !== fallbackAbsolute) {
-          image.src = platform.iconFallbackUrl;
-          return;
-        }
-      }
-
-      image.remove();
-      appendFallbackIcon(iconWrap, platform.iconFallbackClass);
-    });
-    iconWrap.append(image);
-    return iconWrap;
-  }
-
-  if (platform.iconClass) {
-    appendFallbackIcon(iconWrap, platform.iconClass);
-  }
-
-  return iconWrap;
+.site-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  animation: rise-in 0.45s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.38rem;
 }
 
-function createLinkButton(platform, url) {
-  const hasUrl = Boolean(url);
-  const element = hasUrl ? document.createElement("a") : document.createElement("button");
-  element.className = "link-button";
-
-  if (hasUrl) {
-    element.href = url;
-    element.target = "_blank";
-    element.rel = "noopener noreferrer";
-  } else {
-    element.type = "button";
-    element.classList.add("is-disabled");
-    element.disabled = true;
-  }
-
-  const icon = createIconElement(platform);
-
-  const content = document.createElement("span");
-  content.className = "link-content";
-
-  const name = document.createElement("span");
-  name.className = "link-name";
-  name.textContent = platform.name;
-
-  const status = document.createElement("span");
-  status.className = "link-status";
-  status.textContent = hasUrl ? "Abrir" : "Em breve";
-
-  content.append(name, status);
-  element.append(icon, content);
-
-  return element;
+.logo {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  display: block;
 }
 
-function renderPublicLinks() {
-  const links = getLinksModel();
-  linkList.innerHTML = "";
-
-  for (const platform of PLATFORMS) {
-    const url = links[platform.id] || "";
-    linkList.append(createLinkButton(platform, url));
-  }
+.card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  padding: 1.15rem;
+  backdrop-filter: blur(3px);
+  animation: rise-in 0.45s ease-out;
 }
 
-function renderAdminFields() {
-  const links = getLinksModel();
-  adminFields.innerHTML = "";
-
-  for (const platform of PLATFORMS) {
-    const fieldGroup = document.createElement("div");
-    fieldGroup.className = "field-group";
-
-    const label = document.createElement("label");
-    label.setAttribute("for", `field-${platform.id}`);
-    label.textContent = platform.name;
-
-    const input = document.createElement("input");
-    input.type = "url";
-    input.id = `field-${platform.id}`;
-    input.name = platform.id;
-    input.placeholder = platform.placeholder;
-    input.value = links[platform.id] || "";
-
-    fieldGroup.append(label, input);
-    adminFields.append(fieldGroup);
-  }
+.section-title h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-family: "Fraunces", serif;
+  color: var(--brand-strong);
 }
 
-function hasAdminAccess() {
-  return sessionStorage.getItem(ADMIN_AUTH_KEY) === "ok";
+.section-title p {
+  margin: 0.35rem 0 0.95rem;
+  color: var(--text-soft);
+  font-size: 0.92rem;
 }
 
-async function hashPassword(password) {
-  const normalized = String(password);
-
-  if (window.crypto && window.crypto.subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(normalized);
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  }
-
-  return sha256Fallback(normalized);
+.link-list {
+  display: grid;
+  gap: 0.72rem;
 }
 
-function sha256Fallback(value) {
-  const rightRotate = (number, amount) => (number >>> amount) | (number << (32 - amount));
-  const mathPow = Math.pow;
-  const maxWord = mathPow(2, 32);
-  const words = [];
-  const asciiBitLength = value.length * 8;
-  const hash = [];
-  const k = [];
-  const isComposite = {};
-  let result = "";
-  let primeCounter = 0;
-
-  for (let candidate = 2; primeCounter < 64; candidate += 1) {
-    if (isComposite[candidate]) {
-      continue;
-    }
-
-    for (let multiple = candidate * candidate; multiple < 313; multiple += candidate) {
-      isComposite[multiple] = true;
-    }
-
-    hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
-    k[primeCounter] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
-    primeCounter += 1;
-  }
-
-  let ascii = value + "\x80";
-  while ((ascii.length % 64) !== 56) {
-    ascii += "\x00";
-  }
-
-  for (let i = 0; i < ascii.length; i += 1) {
-    const code = ascii.charCodeAt(i);
-    words[i >> 2] = words[i >> 2] || 0;
-    words[i >> 2] |= code << ((3 - (i % 4)) * 8);
-  }
-
-  words[words.length] = (asciiBitLength / maxWord) | 0;
-  words[words.length] = asciiBitLength;
-
-  for (let i = 0; i < words.length; i += 16) {
-    const w = words.slice(i, i + 16);
-    const workingHash = hash.slice(0);
-
-    for (let round = 0; round < 64; round += 1) {
-      const w15 = w[round - 15];
-      const w2 = w[round - 2];
-      const gamma0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
-      const gamma1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
-
-      w[round] = round < 16 ? w[round] : (((w[round - 16] + gamma0 + w[round - 7] + gamma1) | 0) >>> 0);
-
-      const ch = (workingHash[4] & workingHash[5]) ^ (~workingHash[4] & workingHash[6]);
-      const maj =
-        (workingHash[0] & workingHash[1]) ^
-        (workingHash[0] & workingHash[2]) ^
-        (workingHash[1] & workingHash[2]);
-      const sigma0 =
-        rightRotate(workingHash[0], 2) ^
-        rightRotate(workingHash[0], 13) ^
-        rightRotate(workingHash[0], 22);
-      const sigma1 =
-        rightRotate(workingHash[4], 6) ^
-        rightRotate(workingHash[4], 11) ^
-        rightRotate(workingHash[4], 25);
-
-      const temp1 = (workingHash[7] + sigma1 + ch + k[round] + w[round]) | 0;
-      const temp2 = (sigma0 + maj) | 0;
-
-      workingHash[7] = workingHash[6];
-      workingHash[6] = workingHash[5];
-      workingHash[5] = workingHash[4];
-      workingHash[4] = (workingHash[3] + temp1) | 0;
-      workingHash[3] = workingHash[2];
-      workingHash[2] = workingHash[1];
-      workingHash[1] = workingHash[0];
-      workingHash[0] = (temp1 + temp2) | 0;
-    }
-
-    for (let round = 0; round < 8; round += 1) {
-      hash[round] = (hash[round] + workingHash[round]) | 0;
-    }
-  }
-
-  for (let i = 0; i < 8; i += 1) {
-    for (let j = 3; j >= 0; j -= 1) {
-      const byteValue = (hash[i] >> (j * 8)) & 255;
-      result += byteValue.toString(16).padStart(2, "0");
-    }
-  }
-
-  return result;
+.link-button {
+  width: 100%;
+  min-height: 3.45rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #f7faef);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: var(--text-main);
+  padding: 0.9rem 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
 }
 
-async function requestAdminAccess() {
-  return new Promise((resolve) => {
-    if (!authModal || !authForm || !authPasswordInput || !authCancel || !authError) {
-      resolve(false);
-      return;
-    }
-
-    let settled = false;
-
-    const closeModal = (granted) => {
-      if (settled) {
-        return;
-      }
-
-      settled = true;
-      authModal.classList.remove("is-open");
-      document.body.classList.remove("modal-open");
-
-      authForm.removeEventListener("submit", onSubmit);
-      authCancel.removeEventListener("click", onCancel);
-      authModal.removeEventListener("click", onBackdropClick);
-      window.removeEventListener("keydown", onKeydown);
-
-      resolve(granted);
-    };
-
-    const onCancel = () => {
-      closeModal(false);
-    };
-
-    const onBackdropClick = (event) => {
-      if (event.target === authModal) {
-        closeModal(false);
-      }
-    };
-
-    const onKeydown = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeModal(false);
-      }
-    };
-
-    const onSubmit = async (event) => {
-      event.preventDefault();
-
-      const input = authPasswordInput.value.trim();
-      if (!input) {
-        authError.textContent = "Digite a senha.";
-        authPasswordInput.focus();
-        return;
-      }
-
-      authError.textContent = "";
-
-      try {
-        const inputHash = await hashPassword(input);
-        if (inputHash === ADMIN_PASSWORD_HASH) {
-          sessionStorage.setItem(ADMIN_AUTH_KEY, "ok");
-          closeModal(true);
-          return;
-        }
-
-        authError.textContent = "Senha incorreta. Tente novamente.";
-        authPasswordInput.select();
-        authPasswordInput.focus();
-      } catch (error) {
-        authError.textContent = "Nao foi possivel validar a senha neste navegador.";
-      }
-    };
-
-    authForm.reset();
-    authError.textContent = "";
-    authModal.classList.add("is-open");
-    document.body.classList.add("modal-open");
-
-    authForm.addEventListener("submit", onSubmit);
-    authCancel.addEventListener("click", onCancel);
-    authModal.addEventListener("click", onBackdropClick);
-    window.addEventListener("keydown", onKeydown);
-
-    window.setTimeout(() => {
-      authPasswordInput.focus();
-    }, 30);
-  });
+.link-button:hover,
+.link-button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(73, 105, 45, 0.18);
+  border-color: rgba(106, 154, 66, 0.55);
+  outline: none;
 }
 
-function showToast(message, isError = false) {
-  if (!toast) {
-    return;
-  }
-
-  const iconClass = isError ? "bi bi-x-circle-fill" : "bi bi-check-circle-fill";
-  toast.className = `toast is-visible${isError ? " is-error" : ""}`;
-  toast.innerHTML = `<i class="${iconClass}" aria-hidden="true"></i><span>${message}</span>`;
-
-  if (toastTimerId) {
-    window.clearTimeout(toastTimerId);
-  }
-
-  toastTimerId = window.setTimeout(() => {
-    toast.classList.remove("is-visible");
-  }, 3000);
+.link-button.is-disabled {
+  opacity: 0.72;
+  background: #f8f8f8;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-function handleAdminSubmit(event) {
-  event.preventDefault();
-
-  const formData = new FormData(adminForm);
-  const nextLinks = {};
-  const invalid = [];
-
-  for (const platform of PLATFORMS) {
-    const formatted = formatLink(String(formData.get(platform.id) || ""));
-
-    if (formatted && !isValidHttpUrl(formatted)) {
-      invalid.push(platform.name);
-    }
-
-    nextLinks[platform.id] = formatted;
-  }
-
-  if (invalid.length) {
-    showToast(`Links inv\u00e1lidos: ${invalid.join(", ")}.`, true);
-    return;
-  }
-
-  const saved = saveLinksModel(nextLinks);
-  if (!saved) {
-    showToast("N\u00e3o foi poss\u00edvel salvar no navegador.", true);
-    return;
-  }
-
-  renderPublicLinks();
-  showToast("Altera\u00e7\u00f5es salvas com sucesso!");
+.link-button.is-disabled:hover,
+.link-button.is-disabled:focus-visible {
+  transform: none;
+  border-color: var(--border-soft);
 }
 
-function navigate(route, options = {}) {
-  const targetPath = buildRoutePath(route);
-  const useReplace = Boolean(options.replace);
-
-  try {
-    if (useReplace) {
-      history.replaceState({}, "", targetPath);
-    } else {
-      history.pushState({}, "", targetPath);
-    }
-  } catch (error) {
-    window.location.hash = route === "admin" ? "#/admin" : "#/";
-  }
-
-  void renderRoute();
+.icon-wrap {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(106, 154, 66, 0.13);
+  color: var(--brand-strong);
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
-async function renderRoute() {
-  const route = getRouteFromLocation();
-  const inAdmin = route === "admin";
+.brand-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  object-fit: contain;
+  border-radius: 0.4rem;
+}
 
-  if (inAdmin && !hasAdminAccess()) {
-    const granted = await requestAdminAccess();
-    if (!granted) {
-      window.location.href = buildRoutePath("public");
-      return;
-    }
+.icon-badge {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.link-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.link-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.link-status {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-soft);
+}
+
+.admin-fields {
+  display: grid;
+  gap: 0.82rem;
+}
+
+.admin-panel {
+  display: grid;
+  gap: 0.92rem;
+}
+
+.field-group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field-group label {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.field-group input {
+  width: 100%;
+  border: 1px solid #d5deca;
+  border-radius: 14px;
+  padding: 0.82rem 0.92rem;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-group input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(106, 154, 66, 0.2);
+  outline: none;
+}
+
+.save-btn {
+  width: 100%;
+  min-height: 3rem;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #fff;
+  padding: 0.88rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.save-btn:hover,
+.save-btn:focus-visible {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(79, 123, 47, 0.28);
+  outline: none;
+}
+
+.footer-nav {
+  margin-top: 0.95rem;
+  text-align: center;
+}
+
+.admin-toggle {
+  border: 1px solid rgba(106, 154, 66, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.92rem;
+  min-height: 2.75rem;
+  padding: 0.58rem 1.08rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-toggle:hover,
+.admin-toggle:focus-visible {
+  background: #f3f8ec;
+  border-color: rgba(106, 154, 66, 0.55);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(24, 32, 18, 0.44);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.auth-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.auth-card {
+  width: min(100%, 390px);
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 22px;
+  box-shadow: 0 28px 50px rgba(38, 54, 27, 0.28);
+  padding: 1.45rem 1.3rem 1.2rem;
+  transform: translateY(10px) scale(0.98);
+  transition: transform 0.24s ease;
+}
+
+.auth-modal.is-open .auth-card {
+  transform: translateY(0) scale(1);
+  animation: fade-in 0.26s ease;
+}
+
+.auth-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--brand-strong);
+  font-family: "Fraunces", serif;
+}
+
+.auth-subtitle {
+  margin: 0.3rem 0 1rem;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-input {
+  width: 100%;
+  height: 3rem;
+  border: 1px solid #d4deca;
+  border-radius: 999px;
+  padding: 0 1.05rem;
+  font-size: 1rem;
+  color: var(--text-main);
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(106, 154, 66, 0.2);
+  outline: none;
+}
+
+.auth-error {
+  margin: 0;
+  min-height: 1rem;
+  font-size: 0.82rem;
+  color: #9a2f2f;
+}
+
+.auth-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+}
+
+.auth-btn {
+  border: 0;
+  border-radius: 999px;
+  min-height: 2.85rem;
+  font-weight: 700;
+  font-size: 0.93rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-btn:hover,
+.auth-btn:focus-visible {
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.auth-btn-primary {
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #fff;
+}
+
+.auth-btn-primary:hover,
+.auth-btn-primary:focus-visible {
+  filter: brightness(1.05);
+}
+
+.auth-btn-secondary {
+  background: #edf3e7;
+  color: var(--brand-strong);
+}
+
+.auth-btn-secondary:hover,
+.auth-btn-secondary:focus-visible {
+  background: #e3ecdb;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 1rem;
+  z-index: 40;
+  width: min(calc(100vw - 1.2rem), 420px);
+  transform: translate(-50%, -10px);
+  opacity: 0;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.48rem;
+  background: linear-gradient(180deg, #75aa47, #5f9039);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.68rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 16px 30px rgba(47, 77, 28, 0.34);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast.is-error {
+  background: linear-gradient(180deg, #c85656, #b33e3e);
+}
+
+.toast i {
+  font-size: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .page-wrap {
+    padding: 2.1rem 1rem 2.8rem;
   }
 
-  publicView.classList.toggle("hidden", inAdmin);
-  adminView.classList.toggle("hidden", !inAdmin);
+  .site-header {
+    margin-bottom: 1.25rem;
+  }
 
-  adminToggle.textContent = inAdmin ? "Voltar" : "Ajustes";
-  document.title = inAdmin ? "Coentro | Admin" : "Coentro | Links Oficiais";
+  .card {
+    border-radius: 24px;
+    padding: 1.45rem;
+  }
 
-  if (inAdmin) {
-    renderAdminFields();
+  .link-list {
+    gap: 0.82rem;
+  }
+
+  .link-button {
+    min-height: 3.6rem;
+    padding: 0.98rem 1.1rem;
+  }
+
+  .link-name {
+    font-size: 1.03rem;
+  }
+
+  .admin-panel {
+    gap: 1rem;
+  }
+
+  .admin-fields {
+    gap: 0.95rem;
+  }
+
+  .field-group input {
+    padding: 0.9rem 0.95rem;
+    font-size: 0.96rem;
+  }
+
+  .save-btn {
+    min-height: 3.15rem;
+    font-size: 0.98rem;
+  }
+
+  .footer-nav {
+    margin-top: 1.15rem;
+  }
+
+  .admin-toggle {
+    min-height: 2.85rem;
+    font-size: 0.95rem;
+    padding: 0.62rem 1.2rem;
+  }
+
+  .auth-card {
+    width: min(100%, 410px);
+    padding: 1.6rem 1.45rem 1.3rem;
+  }
+
+  .auth-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .toast {
+    top: 1.15rem;
   }
 }
 
-function init() {
-  renderPublicLinks();
-  void renderRoute();
+@media (min-width: 1024px) {
+  .page-wrap {
+    padding-top: 2.7rem;
+    padding-bottom: 3.3rem;
+  }
 
-  adminForm.addEventListener("submit", handleAdminSubmit);
+  .card {
+    padding: 1.65rem;
+  }
 
-  adminToggle.addEventListener("click", () => {
-    const route = getRouteFromLocation();
+  .link-button {
+    min-height: 3.7rem;
+    padding: 1.02rem 1.15rem;
+  }
 
-    if (route === "admin") {
-      navigate("public");
-      return;
-    }
+  .link-status {
+    font-size: 0.76rem;
+  }
 
-    navigate("admin");
-  });
+  .field-group label {
+    font-size: 0.9rem;
+  }
 
-  window.addEventListener("popstate", () => {
-    void renderRoute();
-  });
-  window.addEventListener("hashchange", () => {
-    void renderRoute();
-  });
+  .field-group input {
+    font-size: 1rem;
+  }
+
+  .save-btn {
+    font-size: 1rem;
+  }
+
+  .auth-card h2 {
+    font-size: 1.45rem;
+  }
+
+  .auth-subtitle {
+    font-size: 1rem;
+  }
 }
 
-init();
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
 
 
