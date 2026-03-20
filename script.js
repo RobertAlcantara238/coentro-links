@@ -27,7 +27,7 @@ const LINKS = [
   {
     name: "Card\u00e1pio",
     icon: "images/menu.png",
-    url: ""
+    url: "Card\u00e1pio.pdf"
   }
 ];
 
